@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brand tokens (requirements §11.2), stored as RGB triplets so Tailwind can apply opacity. */
+@layer base {
+  :root {
+    --primary: 255 107 44;          /* #FF6B2C signal orange */
+    --primary-foreground: 11 18 32; /* navy on orange keeps WCAG AA contrast */
+    --primary-text: 194 65 12;      /* darker orange for text links on light surfaces */
+    --ink: 11 18 32;                /* #0B1220 */
+    --surface: 255 255 255;
+    --background: 247 248 250;      /* #F7F8FA */
+    --muted: 91 106 128;            /* #5B6A80 — 5.2:1 on the page background (WCAG AA) */
+    --border: 229 231 235;          /* #E5E7EB */
+    color-scheme: light;
+  }
+  .dark {
+    --primary: 255 122 64;          /* #FF7A40 */
+    --primary-foreground: 11 18 32;
+    --primary-text: 255 122 64;
+    --ink: 241 245 249;             /* #F1F5F9 */
+    --surface: 15 23 42;            /* #0F172A */
+    --background: 7 11 20;          /* #070B14 */
+    --muted: 148 163 184;           /* #94A3B8 */
+    --border: 30 41 59;             /* #1E293B */
+    color-scheme: dark;
+  }
+
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-background font-sans text-ink antialiased; text-rendering: optimizeLegibility; }
+  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+  :focus-visible { @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background; }
+  ::selection { background: rgb(var(--primary) / 0.25); }
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/15 bg-white/10 backdrop-blur-xl;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground;
+  }
+  .eyebrow::before { content: ''; @apply h-1.5 w-1.5 rounded-full bg-primary-foreground; }
+  .section { @apply py-20 sm:py-28; }
+  .section-title { @apply text-balance text-3xl font-extrabold leading-[1.1] sm:text-4xl lg:text-5xl; }
+  .bg-grid {
+    background-image: linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Leaflet tweaks */
+.leaflet-container { font: inherit; background: rgb(var(--background)); }
+.leaflet-control-attribution { font-size: 10px; }
+.leaflet-container .leaflet-tile-pane .osm-dark { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.4); }
+/* Subtle desaturation keeps the OSM fallback close to the Positron look */
+html:not(.dark) .leaflet-tile-pane .leaflet-layer:not(.osm-dark) { filter: saturate(0.35) brightness(1.04); }

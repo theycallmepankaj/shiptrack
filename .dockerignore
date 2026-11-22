@@ -1,0 +1,16 @@
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+**/dist
+**/uploads
+**/coverage
+**/test-results
+**/playwright-report
+.git
+.github
+ai-service
+e2e
+docs
+*.md
+!server/seed-docs/*.md

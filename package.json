@@ -1,0 +1,22 @@
+{
+  "name": "shiptrack",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "lint": "npm run lint -w client && npm run lint -w server",
+    "format": "prettier --write \"client/src/**/*.{js,jsx,css}\" \"server/src/**/*.js\"",
+    "test": "npm test -w server",
+    "e2e": "playwright test -c e2e/playwright.config.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.1",
+    "@playwright/test": "1.49.1",
+    "prettier": "3.4.2"
+  }
+}
