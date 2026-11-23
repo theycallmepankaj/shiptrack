@@ -178,8 +178,8 @@ Target: **MongoDB Atlas** (database + vector search) · **Render** (Node API + P
 |---|---|---|
 | both | `MONGO_URI` | the Atlas string from step 1 |
 | api | `CLIENT_URL` | your Vercel URL, e.g. `https://shiptrack.vercel.app` |
-| api | `PUBLIC_URL` / `AI_SERVICE_URL` | `https://shiptrack-api.onrender.com` / `https://shiptrack-ai.onrender.com` |
-| ai | `NODE_API_URL` | `https://shiptrack-api.onrender.com` |
+| api | `PUBLIC_URL` / `AI_SERVICE_URL` | `https://pankaj-shiptrack-api.onrender.com` / `https://pankaj-shiptrack-ai.onrender.com` |
+| ai | `NODE_API_URL` | `https://pankaj-shiptrack-api.onrender.com` |
 | api | `RAZORPAY_KEY_ID` / `_SECRET` | Razorpay **test** keys (required in production) |
 | api | `CLOUDINARY_URL` | `cloudinary://key:secret@cloud` — Render's disk is wiped on every deploy |
 | api | `SMTP_*` | optional; without them emails are only logged |
@@ -189,12 +189,12 @@ Target: **MongoDB Atlas** (database + vector search) · **Render** (Node API + P
 
 **3. Vercel** — *New Project* → import the repo → **Root Directory `client`** (Vite is detected). Environment variables:
 - `VITE_API_URL=/` — the API is reached through the `/api` rewrite in `client/vercel.json`, so the refresh cookie is first-party (Safari and other browsers block third-party cookies).
-- `VITE_SOCKET_URL=https://shiptrack-api.onrender.com` — WebSockets go straight to Render.
+- `VITE_SOCKET_URL=https://pankaj-shiptrack-api.onrender.com` — WebSockets go straight to Render.
 - `VITE_CARTO_API_KEY` (optional).
 
 **4. Razorpay webhook (optional):** *Settings → Webhooks* → `https://<vercel-app>/api/payments/webhook`, events `payment.captured` and `payment.failed`, secret → `RAZORPAY_WEBHOOK_SECRET`.
 
-**Check it:** `https://shiptrack-api.onrender.com/api/health` → `{"status":"ok","db":"connected"}`; log in with a demo account; book and pay with Razorpay test card `4111 1111 1111 1111` (any future date/CVV) or UPI `success@razorpay`.
+**Check it:** `https://pankaj-shiptrack-api.onrender.com/api/health` → `{"status":"ok","db":"connected"}`; log in with a demo account; book and pay with Razorpay test card `4111 1111 1111 1111` (any future date/CVV) or UPI `success@razorpay`.
 
 **Good to know**
 - Free Render services sleep after 15 idle minutes; the first request then takes ~1 minute. While the AI service sleeps the API falls back to its own ETA, routing and assignment, but the chatbot replies "unavailable".
