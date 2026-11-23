@@ -154,7 +154,18 @@ A chat button sits on every customer page and on the public tracking page; guest
 | `RAG_MIN_SCORE` | `0` (auto) | "Not sure" threshold. Calibrated for bge on the sample policies: real questions scored ≥ 0.61, off-topic ≤ 0.52 → 0.56. |
 
 ## Deploy
-Target: **MongoDB Atlas** (database + vector search) · **Render** (Node API + Python AI service, from `render.yaml`) · **Vercel** (client). Free tiers work for a demo.
+### One click: everything on Render
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/theycallmepankaj/shiptrack)
+
+`render.yaml` creates three services: the website (static, proxies `/api` so the login cookie is first-party), the Node API and the Python AI service. Render asks for:
+- `MONGO_URI` — a MongoDB reachable from the internet (e.g. Atlas; allow access from `0.0.0.0/0`), with the database name in the URI.
+- `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` — Razorpay **test** keys (required in production).
+- Optional: `CLOUDINARY_URL` (keeps uploads across deploys), `SMTP_*`, `LLM_API_KEY`, `RAZORPAY_WEBHOOK_SECRET`, `VITE_CARTO_API_KEY` — leave blank to skip.
+
+URLs: site `https://pankaj-shiptrack.onrender.com`, API `https://pankaj-shiptrack-api.onrender.com`, AI `https://pankaj-shiptrack-ai.onrender.com`. Razorpay webhook (optional): `https://pankaj-shiptrack-api.onrender.com/api/payments/webhook`.
+
+### Alternative: Atlas + Render + Vercel
+Target: **MongoDB Atlas** (database + vector search) · **Render** (Node API + Python AI service) · **Vercel** (client). Free tiers work for a demo.
 
 **1. MongoDB Atlas**
 1. Create a free M0 cluster, a database user, and allow network access from `0.0.0.0/0` (Render's IPs aren't fixed).

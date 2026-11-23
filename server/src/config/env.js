@@ -21,7 +21,8 @@ const schema = z.object({
   GEOCODER_URL: z.string().default('https://nominatim.openstreetmap.org'),
   GEOCODER_USER_AGENT: z.string().default('ShipTrack/0.1 (courier tracking demo)'),
   GEOCODER_COUNTRY: z.string().default('in'),
-  PUBLIC_URL: z.string().default('http://localhost:5000'), // this API's public origin, for uploaded file URLs
+  // This API's public origin, for uploaded file URLs (Render sets RENDER_EXTERNAL_URL itself).
+  PUBLIC_URL: z.string().default(process.env.RENDER_EXTERNAL_URL || 'http://localhost:5000'),
   OTP_SECRET: z.string().min(1).default('dev-otp-secret'),
   CLOUDINARY_URL: z.string().optional(), // cloudinary://<key>:<secret>@<cloud>; local disk when empty
   UPLOAD_DIR: z.string().default('uploads'),

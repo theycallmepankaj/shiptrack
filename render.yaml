@@ -1,10 +1,52 @@
-# Render Blueprint: the Node API and the Python AI service (Dashboard → Blueprints → New).
-# MongoDB lives on Atlas and the client on Vercel — see README › Deploy.
-# Values marked `sync: false` are asked for when the Blueprint is created.
+# Render Blueprint: the website, the Node API and the Python AI service.
+# Deploy: https://render.com/deploy?repo=https://github.com/theycallmepankaj/shiptrack
+# Render asks for the `sync: false` values (MongoDB URI, Razorpay test keys, optional extras).
+# The service URLs below follow from the service names; if you rename a service, update them.
 services:
+  # ---------- Website (static) ----------
   - type: web
-    name: shiptrack-api
+    runtime: static
+    name: pankaj-shiptrack
+    buildCommand: npm ci --workspace client --no-audit --no-fund && npm run build --workspace client
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: VITE_API_URL # same origin: /api is proxied below, so the login cookie is first-party
+        value: /
+      - key: VITE_SOCKET_URL # WebSockets connect straight to the API
+        value: https://pankaj-shiptrack-api.onrender.com
+      - key: VITE_CARTO_API_KEY # optional map tiles key
+        sync: false
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://pankaj-shiptrack-api.onrender.com/api/*
+      # The landing page is the prerendered index.html; every other route gets the app shell.
+      - type: rewrite
+        source: /*
+        destination: /app.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(self), geolocation=(self), microphone=()
+
+  # ---------- Node API ----------
+  - type: web
     runtime: docker
+    name: pankaj-shiptrack-api
     dockerfilePath: ./server/Dockerfile
     dockerContext: .
     region: singapore
@@ -14,18 +56,18 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGO_URI # Atlas connection string, database "shiptrack"
+      - key: MONGO_URI # your MongoDB connection string (database name included)
         sync: false
-      - key: CLIENT_URL # the Vercel URL, e.g. https://shiptrack.vercel.app (comma-separate several)
-        sync: false
-      - key: PUBLIC_URL # this service's URL, e.g. https://shiptrack-api.onrender.com
-        sync: false
-      - key: AI_SERVICE_URL # e.g. https://shiptrack-ai.onrender.com
-        sync: false
+      - key: CLIENT_URL
+        value: https://pankaj-shiptrack.onrender.com
+      - key: PUBLIC_URL
+        value: https://pankaj-shiptrack-api.onrender.com
+      - key: AI_SERVICE_URL
+        value: https://pankaj-shiptrack-ai.onrender.com
       - key: INTERNAL_API_KEY
         fromService:
           type: web
-          name: shiptrack-ai
+          name: pankaj-shiptrack-ai
           envVarKey: INTERNAL_API_KEY
       - key: JWT_ACCESS_SECRET
         generateValue: true
@@ -33,37 +75,37 @@ services:
         generateValue: true
       - key: OTP_SECRET
         generateValue: true
-      - key: TRUST_PROXY # Render's proxy + Vercel's /api rewrite
+      - key: TRUST_PROXY # Render's proxy + the website's /api rewrite
         value: "2"
-      - key: RAZORPAY_KEY_ID # test-mode keys
+      - key: RAZORPAY_KEY_ID # Razorpay TEST mode keys
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
-      - key: RAZORPAY_WEBHOOK_SECRET
+      - key: RAZORPAY_WEBHOOK_SECRET # optional
         sync: false
-      - key: CLOUDINARY_URL # proof photos, signatures and policy documents (Render's disk is wiped on deploy)
+      - key: CLOUDINARY_URL # optional but recommended: Render's disk is wiped on every deploy
         sync: false
-      - key: SMTP_HOST
+      - key: SMTP_HOST # optional: without SMTP, emails are only logged
         sync: false
-      - key: SMTP_PORT
-        value: "587"
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: SMTP_PORT
+        value: "587"
       - key: MAIL_FROM
         value: ShipTrack <no-reply@shiptrack.dev>
-      - key: SEED_DEMO # demo accounts + sample data on first start; set "false" for a real launch
+      - key: SEED_DEMO # demo accounts + sample data on first start; "false" for a real launch
         value: "true"
 
+  # ---------- Python AI service ----------
   - type: web
-    name: shiptrack-ai
     runtime: docker
+    name: pankaj-shiptrack-ai
     dockerfilePath: ./ai-service/Dockerfile
     dockerContext: ./ai-service
     region: singapore
-    # Measured peak (model training + document indexing + chat): ~370 MB, so the free plan's 512 MB fits.
-    # Free instances sleep after 15 idle minutes; the API falls back to its own ETA/routing meanwhile.
+    # Measured peak (model training + document indexing + chat): ~370 MB, within the free plan's 512 MB.
     plan: free
     healthCheckPath: /health
     autoDeploy: true
@@ -73,10 +115,13 @@ services:
       - key: INTERNAL_API_KEY
         generateValue: true
       - key: MONGO_URI
+        fromService:
+          type: web
+          name: pankaj-shiptrack-api
+          envVarKey: MONGO_URI
+      - key: NODE_API_URL
+        value: https://pankaj-shiptrack-api.onrender.com
+      - key: LLM_API_KEY # optional Claude key; without it the bot quotes the policy text
         sync: false
-      - key: NODE_API_URL # the API's URL, e.g. https://shiptrack-api.onrender.com
-        sync: false
-      - key: LLM_API_KEY # Claude API key; without it the bot quotes the policy text
-        sync: false
-      - key: VECTOR_SEARCH # after running python -m app.rag.setup_index against Atlas
-        value: atlas
+      - key: VECTOR_SEARCH # in-service search works with any MongoDB; "atlas" after setup_index on Atlas
+        value: local
