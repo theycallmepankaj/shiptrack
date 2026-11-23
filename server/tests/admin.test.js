@@ -50,6 +50,27 @@ describe('admin access', () => {
   });
 });
 
+describe('admin team (FR-2)', () => {
+  it('admins create, deactivate and reactivate other admins — never themselves', async () => {
+    const auth = { Authorization: `Bearer ${admin}` };
+    const created = await request(app).post('/api/admin/admins').set(auth).send({ name: 'Second Admin', email: 'ops@shiptrack.dev', phone: '+91 90000 00009', password: 'Second@123' });
+    expect(created.status).toBe(201);
+    expect((await request(app).post('/api/admin/admins').set(auth).send({ name: 'Dup', email: 'ops@shiptrack.dev', phone: '+91 90000 00009', password: 'Second@123' })).status).toBe(400);
+    const second = await login('ops@shiptrack.dev', 'Second@123');
+    expect(second).toBeDefined();
+    expect((await request(app).get('/api/admin/admins').set(auth)).body.admins).toHaveLength(2);
+
+    const me = (await request(app).get('/api/auth/me').set(auth)).body.user;
+    expect((await request(app).patch(`/api/admin/admins/${me.id}`).set(auth).send({ isActive: false })).body.error).toMatch(/your own/);
+    const off = await request(app).patch(`/api/admin/admins/${created.body.admin.id}`).set(auth).send({ isActive: false });
+    expect(off.body.admin.isActive).toBe(false);
+    expect((await request(app).post('/api/auth/login').send({ email: 'ops@shiptrack.dev', password: 'Second@123' })).status).toBe(403);
+    // The remaining admin can't be deactivated by the other one either: always one active admin.
+    expect((await request(app).patch(`/api/admin/admins/${created.body.admin.id}`).set(auth).send({ isActive: true })).body.admin.isActive).toBe(true);
+    expect((await request(app).post('/api/admin/admins').set({ Authorization: `Bearer ${customer}` }).send({})).status).toBe(403);
+  });
+});
+
 describe('drivers (FR-30)', () => {
   it('creates a driver who can log in, and rejects duplicates', async () => {
     const res = await request(app).post('/api/admin/drivers').set(auth(admin)).send(newDriver(1));

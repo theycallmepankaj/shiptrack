@@ -341,3 +341,36 @@ export async function retrainModel(_req, res) {
     throw new ApiError(503, `Training failed: ${err.message}`);
   }
 }
+
+// FR-2: admins are created by an admin (no public sign-up for staff).
+const adminRow = (u) => ({ id: u._id.toString(), name: u.name, email: u.email, phone: u.phone, isActive: u.isActive, createdAt: u.createdAt });
+
+// GET /api/admin/admins
+export async function listAdmins(_req, res) {
+  const admins = await User.find({ role: 'admin' }).sort({ name: 1 });
+  res.json({ admins: admins.map(adminRow) });
+}
+
+// POST /api/admin/admins
+export async function createAdmin(req, res) {
+  const { name, email, phone, password } = req.body;
+  if (await User.exists({ email })) throw ApiError.badRequest('An account with this email already exists', { email: ['Email already registered'] });
+  const user = new User({ name, email, phone, role: 'admin' });
+  await user.setPassword(password);
+  await user.save();
+  res.status(201).json({ admin: adminRow(user) });
+}
+
+// PATCH /api/admin/admins/:id — deactivate/reactivate (never yourself, never the last active admin)
+export async function updateAdmin(req, res) {
+  const user = mongoose.isValidObjectId(req.params.id) && (await User.findOne({ _id: req.params.id, role: 'admin' }));
+  if (!user) throw ApiError.notFound('Admin not found');
+  if (req.body.isActive === false) {
+    if (user._id.equals(req.user.id)) throw ApiError.badRequest('You can’t deactivate your own account');
+    if ((await User.countDocuments({ role: 'admin', isActive: true })) <= 1) throw ApiError.badRequest('Keep at least one active admin');
+    user.sessions = []; // sign them out everywhere
+  }
+  user.isActive = req.body.isActive;
+  await user.save();
+  res.json({ admin: adminRow(user) });
+}

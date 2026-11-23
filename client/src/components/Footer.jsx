@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
 
 const cols = [
-  { title: 'Product', links: [['Track parcel', '/track'], ['Pricing', '/#pricing'], ['Book a shipment', '/register']] },
+  { title: 'Product', links: [['Track parcel', '/track'], ['Pricing', '/pricing'], ['Book a shipment', '/register']] },
   { title: 'Company', links: [['About', '/#how-it-works'], ['Careers', '/'], ['Contact', '/']] },
   { title: 'Support', links: [['Help centre', '/#faq'], ['Prohibited items', '/#faq'], ['Refund policy', '/#faq']] },
 ];

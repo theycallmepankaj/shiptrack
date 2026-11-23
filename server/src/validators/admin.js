@@ -47,3 +47,11 @@ export const pricingSchema = z.object({
   perKg: z.coerce.number().min(0).max(1000),
   expressMultiplier: z.coerce.number().min(1, 'At least 1×').max(5, 'At most 5×'),
 });
+
+export const createAdminSchema = z.object({
+  name: z.string().trim().min(2, 'Enter a name').max(80),
+  email: z.string().trim().toLowerCase().email('Enter a valid email'),
+  phone,
+  password,
+});
+export const updateAdminSchema = z.object({ isActive: z.boolean() });

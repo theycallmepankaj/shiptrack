@@ -9,6 +9,7 @@ import { DriverProvider } from '@/context/DriverContext';
 // so it ships in the entry bundle instead of costing a second round trip.
 import Landing from '@/pages/public/Landing';
 const NotFound = lazy(() => import('@/pages/public/NotFound'));
+const Pricing = lazy(() => import('@/pages/public/Pricing'));
 const Login = lazy(() => import('@/pages/public/Login'));
 const Register = lazy(() => import('@/pages/public/Register'));
 const ForgotPassword = lazy(() => import('@/pages/public/ForgotPassword'));
@@ -30,6 +31,7 @@ const AdminShipments = lazy(() => import('@/pages/admin/Shipments'));
 const AdminDrivers = lazy(() => import('@/pages/admin/Drivers'));
 const AdminPricing = lazy(() => import('@/pages/admin/Pricing'));
 const AdminDocuments = lazy(() => import('@/pages/admin/Documents'));
+const AdminTeam = lazy(() => import('@/pages/admin/Team'));
 
 function Page({ children }) {
   return (
@@ -76,6 +78,7 @@ export function AppRoutes() {
         <Routes location={location} key={area ?? location.pathname}>
           {/* No fade wrapper: the landing page is prerendered and must be visible before JS runs. */}
           <Route path="/" element={<Landing />} />
+          <Route path="/pricing" element={<Page><Pricing /></Page>} />
           <Route path="/track/:trackingId?" element={<Page><Track /></Page>} />
           <Route path="/login" element={<GuestRoute><Page><Login /></Page></GuestRoute>} />
           <Route path="/register" element={<GuestRoute><Page><Register /></Page></GuestRoute>} />
@@ -108,6 +111,7 @@ export function AppRoutes() {
             <Route path="drivers" element={<AdminDrivers />} />
             <Route path="pricing" element={<AdminPricing />} />
             <Route path="documents" element={<AdminDocuments />} />
+            <Route path="team" element={<AdminTeam />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="profile" element={<Profile />} />
           </Route>

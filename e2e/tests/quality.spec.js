@@ -21,7 +21,7 @@ const serious = (r) =>
 for (const scheme of ['light', 'dark']) {
   test(`public pages pass axe (${scheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
-    for (const path of ['/', '/login', '/register', '/track']) {
+    for (const path of ['/', '/pricing', '/login', '/register', '/track']) {
       await page.goto(path);
       await settle(page);
       expect(serious(await axe(page)), path).toEqual([]);
@@ -32,7 +32,7 @@ for (const scheme of ['light', 'dark']) {
 test('signed-in pages pass axe', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await loginAs(page, 'customer');
-  for (const path of ['/app', '/app/shipments', '/app/book', '/app/notifications']) {
+  for (const path of ['/app', '/app/shipments', '/app/book', '/app/notifications', '/app/profile']) {
     await page.goto(path);
     await settle(page);
     expect(serious(await axe(page)), path).toEqual([]);
@@ -41,12 +41,12 @@ test('signed-in pages pass axe', async ({ page }) => {
 
 test('key pages fit a 360 px phone', async ({ browser }) => {
   const page = await (await browser.newContext({ viewport: { width: 360, height: 780 } })).newPage();
-  for (const path of ['/', '/login', '/track']) {
+  for (const path of ['/', '/pricing', '/login', '/track']) {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
     expect(await horizontalOverflow(page), path).toBeLessThanOrEqual(0);
   }
-  for (const [role, paths] of [['customer', ['/app', '/app/shipments', '/app/book', '/app/notifications']], ['driver', ['/driver', '/driver/history']], ['admin', ['/admin', '/admin/shipments', '/admin/documents']]]) {
+  for (const [role, paths] of [['customer', ['/app', '/app/shipments', '/app/book', '/app/notifications']], ['driver', ['/driver', '/driver/history']], ['admin', ['/admin', '/admin/shipments', '/admin/documents', '/admin/team', '/admin/profile']]]) {
     await loginAs(page, role);
     for (const path of paths) {
       await page.goto(path);

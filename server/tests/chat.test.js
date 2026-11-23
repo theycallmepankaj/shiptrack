@@ -123,6 +123,14 @@ describe('internal shipment lookup for the chatbot (FR-47/48)', () => {
     }
   });
 
+  it('is also reachable at the spec path /internal/shipments/:trackingId', async () => {
+    const customer = await User.findOne({ email: 'customer@shiptrack.dev' });
+    const s = await Shipment.findOne({ customerId: customer._id });
+    const res = await request(app).get(`/api/internal/shipments/${s.trackingId}?userId=${customer._id}`).set(internal);
+    expect(res.body).toMatchObject({ access: 'owner', shipment: { trackingId: s.trackingId } });
+    expect((await request(app).get(`/api/internal/shipments/${s.trackingId}`)).status).toBe(401);
+  });
+
   it('finds the latest parcel for a signed-in user only', async () => {
     const customer = await User.findOne({ email: 'customer@shiptrack.dev' });
     const latest = await Shipment.findOne({ customerId: customer._id }).sort({ createdAt: -1 });

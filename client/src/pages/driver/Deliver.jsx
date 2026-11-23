@@ -57,7 +57,7 @@ export default function Deliver() {
     try {
       const form = new FormData();
       form.set('otp', otp);
-      if (photo) form.set('photo', photo.blob, 'proof.jpg');
+      if (photo) form.set('photo', photo.blob, photo.blob.type === 'image/webp' ? 'proof.webp' : 'proof.jpg');
       if (signed) form.set('signature', await sigRef.current.toBlob(), 'signature.png');
       const pos = await getPosition({ timeout: 3000 });
       if (pos) { form.set('lat', pos.lat); form.set('lng', pos.lng); }

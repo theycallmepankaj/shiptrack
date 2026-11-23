@@ -50,10 +50,10 @@ export async function deleteDocumentChunks(id) {
  * Streams a chat answer from Python's /rag/chat (NDJSON) and calls onEvent for each event:
  * { type: 'meta' | 'token' | 'replace' | 'done', ... }. Throws if the service is unreachable.
  */
-export async function streamChat({ message, history, userId }, onEvent, signal) {
+export async function streamChat({ message, history, userId, requestId }, onEvent, signal) {
   const res = await fetch(`${env.AI_SERVICE_URL}/rag/chat`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-internal-key': env.INTERNAL_API_KEY },
+    headers: { 'content-type': 'application/json', 'x-internal-key': env.INTERNAL_API_KEY, ...(requestId && { 'x-request-id': requestId }) },
     body: JSON.stringify({ message, history, user_id: userId }),
     signal: AbortSignal.any([signal, AbortSignal.timeout(90_000)].filter(Boolean)),
   });

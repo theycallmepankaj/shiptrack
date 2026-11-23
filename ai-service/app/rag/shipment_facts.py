@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 import httpx
 
 from app.core.config import settings
+from app.core.request_id import request_id
 
 IST = timezone(timedelta(hours=5, minutes=30))
 STATUS_LABELS = {
@@ -33,7 +34,7 @@ async def lookup(user_id: str | None, tracking_id: str | None, latest: bool) -> 
     params = {"userId": user_id or "", "trackingId": tracking_id or "", "latest": "1" if latest else ""}
     try:
         async with httpx.AsyncClient(timeout=4.0) as client:
-            res = await client.get(f"{settings.node_api_url}/api/internal/chat/shipment", params=params, headers={"x-internal-key": settings.internal_api_key})
+            res = await client.get(f"{settings.node_api_url}/api/internal/chat/shipment", params=params, headers={"x-internal-key": settings.internal_api_key, "x-request-id": request_id.get()})
     except httpx.HTTPError as err:
         raise LookupUnavailable(str(err)) from err
     if res.status_code == 404:

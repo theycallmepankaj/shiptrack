@@ -1,4 +1,4 @@
-import { Bell, Boxes, FileText, History, LayoutDashboard, Map, Package, PackagePlus, Route, Truck, User, Users, Wallet } from 'lucide-react';
+import { Bell, Boxes, FileText, History, LayoutDashboard, Map, Package, PackagePlus, Route, ShieldCheck, Truck, User, Users, Wallet } from 'lucide-react';
 
 export const ROLE_HOME = { customer: '/app', driver: '/driver', admin: '/admin' };
 export const ROLE_LABEL = { customer: 'Customer', driver: 'Driver', admin: 'Admin' };
@@ -23,6 +23,7 @@ export const NAV = {
     { to: '/admin/drivers', label: 'Drivers', icon: Truck },
     { to: '/admin/pricing', label: 'Pricing', icon: Wallet },
     { to: '/admin/documents', label: 'Chatbot docs', icon: FileText },
+    { to: '/admin/team', label: 'Team', icon: ShieldCheck },
     { to: '/admin/profile', label: 'Profile', icon: Users },
   ],
 };

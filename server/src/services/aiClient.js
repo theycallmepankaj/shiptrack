@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { currentRequestId } from '../middleware/requestId.js';
 
 /**
  * Calls the Python AI service with the shared internal key (NFR-6). Throws on any failure
@@ -8,7 +9,7 @@ import { logger } from '../utils/logger.js';
 export async function callAi(path, body, { timeoutMs = 1500, method = 'POST', returnErrorBody = false } = {}) {
   const res = await fetch(`${env.AI_SERVICE_URL}${path}`, {
     method,
-    headers: { 'content-type': 'application/json', 'x-internal-key': env.INTERNAL_API_KEY },
+    headers: { 'content-type': 'application/json', 'x-internal-key': env.INTERNAL_API_KEY, ...(currentRequestId() && { 'x-request-id': currentRequestId() }) },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs),
   });

@@ -7,7 +7,7 @@ import { validate } from '../middleware/validate.js';
 import { fleetSnapshot } from '../services/liveTracking.js';
 import { asyncHandler as h } from '../utils/asyncHandler.js';
 import { documentSchema, ticketUpdateSchema } from '../validators/chat.js';
-import { assignSchema, createDriverSchema, listDriversSchema, listShipmentsSchema, pricingSchema, updateDriverSchema } from '../validators/admin.js';
+import { assignSchema, createAdminSchema, createDriverSchema, updateAdminSchema, listDriversSchema, listShipmentsSchema, pricingSchema, updateDriverSchema } from '../validators/admin.js';
 
 const router = Router();
 router.use(requireAuth, requireRole('admin'));
@@ -16,6 +16,9 @@ router.get('/fleet', h(async (_req, res) => res.json({ drivers: await fleetSnaps
 router.get('/drivers', validate(listDriversSchema, 'query'), h(c.listDrivers));
 router.post('/drivers', validate(createDriverSchema), h(c.createDriver));
 router.patch('/drivers/:id', validate(updateDriverSchema), h(c.updateDriver));
+router.get('/admins', h(c.listAdmins));
+router.post('/admins', validate(createAdminSchema), h(c.createAdmin));
+router.patch('/admins/:id', validate(updateAdminSchema), h(c.updateAdmin));
 router.get('/shipments', validate(listShipmentsSchema, 'query'), h(c.listShipments));
 router.get('/shipments/:id/candidates', h(c.candidates));
 router.patch('/shipments/:id/assign', validate(assignSchema), h(c.assign));

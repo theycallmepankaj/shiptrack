@@ -16,8 +16,16 @@ running() { [ -f "$STATE/pids/$1" ] && kill -0 "$(cat "$STATE/pids/$1")" 2>/dev/
 launch() { # name, dir, command...
   local name=$1 dir=$2; shift 2
   if running "$name"; then echo "  $name already running"; return; fi
-  (cd "$dir" && nohup "$@" >"$STATE/logs/$name.log" 2>&1 & echo $! >"$STATE/pids/$name")
+  # `&` applies to nohup alone, so $! is the server's own pid (not a wrapper shell).
+  (cd "$dir" || exit 1; nohup "$@" >"$STATE/logs/$name.log" 2>&1 & echo $! >"$STATE/pids/$name")
   echo "  started $name (log: $STATE/logs/$name.log)"
+}
+# Frees a port, but only from a process of this project (cwd inside the repo, or our MongoDB).
+free_port() {
+  local pid; pid=$(lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null | head -1)
+  [ -z "$pid" ] && return
+  local cwd cmd; cwd=$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'); cmd=$(ps -o command= -p "$pid")
+  if [[ "$cwd" == "$ROOT"* || "$cmd" == *"$STATE"* ]]; then kill "$pid" && echo "  freed port $1"; fi
 }
 wait_for() { # url, label
   for _ in $(seq 1 60); do curl -fs -o /dev/null "$1" && { echo "  $2 ready"; return; }; sleep 1; done
@@ -30,7 +38,7 @@ case "${1:-start}" in
     sleep 2
     launch ai "$ROOT/ai-service" .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port $AI_PORT
     launch api "$ROOT/server" node src/index.js
-    launch app "$ROOT/client" npx vite --port $APP_PORT --strictPort
+    launch app "$ROOT/client" "$ROOT/node_modules/.bin/vite" --port $APP_PORT --strictPort
     wait_for "http://localhost:$API_PORT/api/health" API
     wait_for "http://localhost:$AI_PORT/health" "AI service"
     wait_for "http://localhost:$APP_PORT" App
@@ -44,6 +52,8 @@ case "${1:-start}" in
       if running "$name"; then kill "$(cat "$STATE/pids/$name")" && echo "  stopped $name"; fi
       rm -f "$STATE/pids/$name"
     done
+    sleep 1
+    for port in $APP_PORT $API_PORT $AI_PORT $MONGO_PORT; do free_port "$port"; done
     ;;
   status)
     for name in mongo ai api app; do printf '  %-6s %s\n' "$name" "$(running "$name" && echo running || echo stopped)"; done

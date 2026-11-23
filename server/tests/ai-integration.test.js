@@ -17,7 +17,7 @@ const stub = http.createServer((req, res) => {
   req.on('data', (c) => (raw += c));
   req.on('end', () => {
     const body = raw ? JSON.parse(raw) : {};
-    calls.push({ path: req.url, key: req.headers['x-internal-key'], body });
+    calls.push({ path: req.url, key: req.headers['x-internal-key'], rid: req.headers['x-request-id'], body });
     if (mode === 'down') return res.writeHead(500).end();
     const json = (o) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(o));
     if (req.url === '/eta') return json({ eta_hours: 5, p50_hours: 4, source: 'model' });
@@ -65,11 +65,15 @@ afterEach(clearDb);
 
 describe('Node ↔ Python integration (with fallbacks)', () => {
   it('uses the model ETA, sends city info and the internal key', async () => {
-    const { body } = await request(app).post('/api/shipments').set(auth(tokens.customer)).send(booking);
+    const res = await request(app).post('/api/shipments').set(auth(tokens.customer)).set('X-Request-Id', 'trace-abc-123').send(booking);
+    const { body } = res;
     const s = await Shipment.findById(body.shipment.id);
     expect(s.etaSource).toBe('model');
     const eta = calls.find((c) => c.path === '/eta');
     expect(eta.key).toBe(env.INTERNAL_API_KEY);
+    // NFR-7: the caller's request id is echoed and forwarded to the AI service.
+    expect(res.headers['x-request-id']).toBe('trace-abc-123');
+    expect(eta.rid).toBe('trace-abc-123');
     expect(eta.body).toMatchObject({ city: 'Bengaluru', drop_city: 'Bengaluru', speed: 'standard' });
 
     mode = 'down';

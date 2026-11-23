@@ -35,6 +35,7 @@ export default defineConfig({
             PORT: new URL(API).port || '5000',
             MONGO_URI: MONGO,
             CLIENT_URL: WEB,
+            PUBLIC_URL: API, // upload links point at this server, not a .env value
             UPLOAD_DIR: process.env.E2E_UPLOAD_DIR ?? '/tmp/shiptrack-e2e-uploads',
             AI_SERVICE_URL: process.env.E2E_AI_URL ?? 'http://127.0.0.1:9', // unreachable → Node fallbacks
             INTERNAL_API_KEY: process.env.E2E_INTERNAL_KEY ?? 'dev-internal-key',

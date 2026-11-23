@@ -6,10 +6,11 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 
 from .core.config import settings
+from .core.request_id import RequestIdMiddleware, setup_logging
 from .core.security import require_internal_key
 from .routers import assign, eta, forecast, rag, routing
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+setup_logging()
 log = logging.getLogger("startup")
 
 
@@ -36,6 +37,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="ShipTrack AI Service", version="1.0.0", lifespan=lifespan)
+app.add_middleware(RequestIdMiddleware)
 
 
 @app.get("/health")

@@ -143,6 +143,34 @@ describe('login / me / refresh / logout', () => {
   });
 });
 
+describe('profile and password', () => {
+  beforeEach(() => request(app).post('/api/auth/register').send(customer));
+
+  it('edits name and phone, validating input', async () => {
+    const { body } = await request(app).post('/api/auth/login').send(customer);
+    const auth = { Authorization: `Bearer ${body.accessToken}` };
+    const res = await request(app).patch('/api/auth/me').set(auth).send({ name: 'Renamed User', phone: '+91 91234 56789' });
+    expect(res.body.user).toMatchObject({ name: 'Renamed User', phone: '+91 91234 56789' });
+    expect((await request(app).patch('/api/auth/me').set(auth).send({ phone: 'abc' })).status).toBe(400);
+    expect((await request(app).patch('/api/auth/me').set(auth).send({})).status).toBe(400);
+    expect((await request(app).patch('/api/auth/me').send({ name: 'X Y' })).status).toBe(401);
+  });
+
+  it('changes the password with the current one and signs out other devices only', async () => {
+    const here = await request(app).post('/api/auth/login').send(customer);
+    const other = await request(app).post('/api/auth/login').send(customer);
+    const auth = { Authorization: `Bearer ${here.body.accessToken}` };
+    const wrong = await request(app).post('/api/auth/change-password').set(auth).send({ currentPassword: 'Nope1234', newPassword: 'Fresh1234' });
+    expect(wrong.status).toBe(400);
+    expect(wrong.body.details.currentPassword).toBeDefined();
+    const ok = await request(app).post('/api/auth/change-password').set(auth).send({ currentPassword: customer.password, newPassword: 'Fresh1234' });
+    expect(ok.status).toBe(200);
+    expect((await request(app).post('/api/auth/refresh').set('Cookie', cookieOf(here).split(';')[0])).status).toBe(200);
+    expect((await request(app).post('/api/auth/refresh').set('Cookie', cookieOf(other).split(';')[0])).status).toBe(401);
+    expect((await request(app).post('/api/auth/login').send({ email: customer.email, password: 'Fresh1234' })).status).toBe(200);
+  });
+});
+
 describe('forgot / reset password', () => {
   it('resets the password with a valid token, and only once', async () => {
     const reg = await request(app).post('/api/auth/register').send(customer);

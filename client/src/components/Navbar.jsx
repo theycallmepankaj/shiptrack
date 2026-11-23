@@ -12,7 +12,7 @@ import { ROLE_HOME } from '@/lib/roles';
 const links = [
   { href: '/#how-it-works', label: 'How it works' },
   { href: '/#features', label: 'Features' },
-  { href: '/#pricing', label: 'Pricing' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/track', label: 'Track parcel' },
 ];
 

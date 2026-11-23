@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { ChatMessage } from '../models/ChatMessage.js';
 import { assertSessionOwner } from '../services/chatAccess.js';
 import { streamChat } from '../services/rag.js';
@@ -59,6 +60,7 @@ export function initChat(io) {
       }
       busy = new AbortController();
       const controller = busy;
+      let requestId;
       try {
         const previous = await ChatMessage.find({ sessionId }).sort({ createdAt: -1, _id: -1 }).limit(10).select('role content').lean();
         const userMsg = await ChatMessage.create({ userId, sessionId, role: 'user', content: message });
@@ -66,8 +68,9 @@ export function initChat(io) {
 
         let answer = '';
         let done = null;
+        requestId = `chat-${randomUUID()}`; // traced through the AI service's logs
         await streamChat(
-          { message, history: previous.reverse().map((m) => ({ role: m.role, content: m.content })), userId },
+          { message, history: previous.reverse().map((m) => ({ role: m.role, content: m.content })), userId, requestId },
           (e) => {
             if (e.type === 'token') {
               answer += e.text;
@@ -100,7 +103,7 @@ export function initChat(io) {
         });
       } catch (err) {
         if (!controller.signal.aborted) {
-          logger.warn(`chat failed: ${err.message}`);
+          logger.warn(`chat failed [${requestId ?? '-'}]: ${err.message}`);
           socket.emit('chat:error', { sessionId, error: UNAVAILABLE });
         }
       } finally {

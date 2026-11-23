@@ -139,3 +139,26 @@ export async function resetPassword(req, res) {
   await user.save();
   res.json({ message: 'Password updated. You can now log in.' });
 }
+
+// PATCH /api/auth/me — edit your own name and phone.
+export async function updateMe(req, res) {
+  const user = await User.findById(req.user.id);
+  if (!user || !user.isActive) throw ApiError.unauthorized();
+  if (req.body.name !== undefined) user.name = req.body.name;
+  if (req.body.phone !== undefined) user.phone = req.body.phone;
+  await user.save();
+  res.json({ user: user.toPublic() });
+}
+
+// POST /api/auth/change-password — needs the current password; signs out every other device.
+export async function changePassword(req, res) {
+  const user = await User.findById(req.user.id).select('+passwordHash');
+  if (!user || !user.isActive) throw ApiError.unauthorized();
+  if (!(await user.verifyPassword(req.body.currentPassword))) {
+    throw ApiError.badRequest('Your current password is incorrect', { currentPassword: ['Incorrect password'] });
+  }
+  await user.setPassword(req.body.newPassword);
+  await user.save();
+  await User.updateOne({ _id: user._id }, { $pull: { sessions: { sid: { $ne: req.user.sid ?? null } } } });
+  res.json({ message: 'Password changed. Other devices have been signed out.' });
+}

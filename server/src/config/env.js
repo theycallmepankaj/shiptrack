@@ -1,5 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { z } from 'zod';
+
+// Tests don't read .env: they must behave the same on every machine and in CI.
+if (process.env.NODE_ENV !== 'test') dotenv.config();
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

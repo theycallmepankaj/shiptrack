@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpDown, Clock3, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Reveal } from '@/components/Reveal';
-import { CITIES, DEFAULT_RULE, quote } from '@/lib/pricing';
+import { areaById, DEFAULT_RULE, quote, SERVICE_AREAS } from '@/lib/pricing';
 import { cn, formatINR } from '@/lib/utils';
 
 const selectCls =
@@ -19,8 +19,8 @@ function formatEta(hours) {
 }
 
 export function PriceCalculator() {
-  const [from, setFrom] = useState('Mumbai');
-  const [to, setTo] = useState('Pune');
+  const [from, setFrom] = useState('Bengaluru/Indiranagar');
+  const [to, setTo] = useState('Bengaluru/Whitefield');
   const [weight, setWeight] = useState(2);
   const [speed, setSpeed] = useState('standard');
   const [rule, setRule] = useState(DEFAULT_RULE);
@@ -31,8 +31,8 @@ export function PriceCalculator() {
   }, []);
 
   const q = useMemo(() => {
-    const a = CITIES.find((c) => c.name === from);
-    const b = CITIES.find((c) => c.name === to);
+    const a = areaById(from);
+    const b = areaById(to);
     return quote({ from: a, to: b, weightKg: Number(weight) || 0.5, speed }, rule);
   }, [from, to, weight, speed, rule]);
 
@@ -65,7 +65,11 @@ export function PriceCalculator() {
               <div className="space-y-1.5">
                 <Label htmlFor="calc-from">From</Label>
                 <select id="calc-from" value={from} onChange={(e) => setFrom(e.target.value)} className={selectCls}>
-                  {CITIES.map((c) => <option key={c.name}>{c.name}</option>)}
+                  {SERVICE_AREAS.map((g) => (
+                    <optgroup key={g.city} label={g.city}>
+                      {g.areas.map((a) => <option key={a.id} value={a.id}>{a.name}, {a.city}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
               <button
@@ -79,7 +83,11 @@ export function PriceCalculator() {
               <div className="space-y-1.5">
                 <Label htmlFor="calc-to">To</Label>
                 <select id="calc-to" value={to} onChange={(e) => setTo(e.target.value)} className={selectCls}>
-                  {CITIES.map((c) => <option key={c.name}>{c.name}</option>)}
+                  {SERVICE_AREAS.map((g) => (
+                    <optgroup key={g.city} label={g.city}>
+                      {g.areas.map((a) => <option key={a.id} value={a.id}>{a.name}, {a.city}</option>)}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
             </div>
@@ -142,7 +150,7 @@ export function PriceCalculator() {
                 </div>
                 <div className="text-right text-sm">
                   <p className="text-white/60">Delivery</p>
-                  <p className="font-semibold">{from === to ? 'Same day' : formatEta(q.etaHours)}</p>
+                  <p className="font-semibold">{areaById(from).city === areaById(to).city ? (speed === 'express' ? 'Within hours' : 'Same or next day') : formatEta(q.etaHours)}</p>
                 </div>
               </div>
               <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-xs">

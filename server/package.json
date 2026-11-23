@@ -8,7 +8,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "lint": "eslint src tests",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "seed": "node ../scripts/seed.js",
     "assign:demo": "node ../scripts/assign-demo.js"
   },
